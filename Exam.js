@@ -6,6 +6,13 @@ class Exam{
 		this.description = description;
 	}
 
+	createDescription(enrollment, tipe, classroom, note){
+		this.description = "Iscrizioni: "+enrollment+"\nTipo: "+tipe+"\nAula: "+classroom;
+		if(note!="")
+			this.description += "\nNote:\n"+note;
+		return this;
+	}
+
 	create(calendar){
 		calendar.createEvent(this.name, this.start, this.end, {description: this.description});
 	}

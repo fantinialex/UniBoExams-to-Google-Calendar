@@ -4,12 +4,13 @@ class Course{
 		this.name = name;
 		this.tipe = tipe;
 		this.duration = duration;
-		this.report = "";
 	}
 
-	createExams(calendar){
+	createExams(calendar, mail){
 		let exW = this.getExamsWeb();
 		let exC = this.getExamsCalendar(calendar);
+
+		let report = new Report(this.name, mail);
 
 		exW.forEach(ex => {
 			let found = 0, update = false, c = -1;
@@ -22,17 +23,17 @@ class Course{
 			}
 			switch(found){ //controllo quanti ne ho trovati
 				case 0:
-					this.reportAdd(ex);
+					report.add(ex);
 					ex.create(calendar);
 					break;
 				case 1:
 					if(update){
-						this.reportUpdate(exC[c], ex);
+						report.update(exC[c], ex);
 						ex.update(calendar);
 					}
 					break;
 				default:
-					this.reportError(ex);
+					report.error(ex);
 					break;
 			}
 		});
@@ -47,58 +48,41 @@ class Course{
 			if(!found){
 				try{
 					ex.delete(calendar);
-					this.reportDelete(ex);
+					report.delete(ex);
 				}
 				catch(e){
-					this.reportError(ex);
+					report.error(ex);
 				}
 				
 			}
 		});
 
-		this.sendReportMail();
+		report.send();
 	}
 
 	addManual(calendar, dates){
+		let report = new Report(this.name, "");
 		dates.forEach(start => {
 			let end = new Date(start.getTime() + this.duration*60*60*1000);
-			new Exam(this.name, start, end, "NON presente su AlmaEsami").create(calendar);
+			let ex = new Exam(this.name, start, end, "NON presente su AlmaEsami");
+			ex.create(calendar);
+			report.add(ex);
 		});
+		//TODO add check if exam already exists
 	}
 
-	reportAdd(exam){
-		this.report += "<b>Aggiunto esame:</b><br>"
-		this.report += exam.toString()+"<br><br>";
-		console.log("Creato "+exam.name+" del "+exam.start);
-	}
-
-	reportUpdate(o, n){
-		this.report += "<b>Aggiornato esame:</b><br>"
-		this.report += "<b>Versione precedente:</b><br>"+o.toString()+"<br>";
-		this.report += "<b>Nuova versione:</b><br>"+n.toString()+"<br><br>";
-		console.log("Aggiornato "+o.name+" del "+o.start);
-	}
-
-	reportDelete(exam){
-		this.report += "<b>Cancellato esame:</b><br>"
-		this.report += exam.toString()+"<br><br>";
-		console.log("Eliminato "+exam.name+" del "+exam.start);
-	}
-
-	reportError(exam){
-		this.report += "<b>ERRORE esame:</b><br>"
-		this.report += exam.toString()+"<br><br>";
-		console.log("Errore "+exam.name+" del "+exam.start);
-	}
-
-	sendReportMail(){
-		if(this.report != ""){
-			MailApp.sendEmail({
-				to: "mail@example.com",
-				subject: "Report esami "+this.name,
-				htmlBody: this.report
-			});
-		}
+	deleteAllFuture(calendar){
+		let events = this.getExamsCalendar(calendar);
+		let report = new Report(this.name, "");
+		events.forEach(ex => {
+			try{
+				ex.delete(calendar);
+				report.delete(ex);
+			}
+			catch(e){
+				report.error(ex);
+			}
+		});
 	}
 
 	getExamsWeb(){
@@ -117,16 +101,13 @@ class Course{
 
 			//solo esami futuri e del tipo spefificato (o tutti)
 			if(start.valueOf() >= new Date().setHours(0,0,0,0) && (this.tipe[0] == "*" || this.tipe.includes(tipe))){
-				let enrollment = info[0].replace(/(<\/span>)*\s+(<span>)*/gi, " ").trim();
-				let classroom = info[2].trim();
-				let note = "";
-				if(info.length > 3) note = info[3].trim();
-				
-				let description = "Iscrizioni: "+enrollment+"\nTipo: "+tipe+"\nAula: "+classroom;
-				if(note!="") description += "\nNote:\n"+note;
 				let end = new Date(start.getTime() + this.duration*60*60*1000);
 
-				exams.push(new Exam(this.name, start, end, description));
+				let enrollment = info[0].replace(/(<\/span>)*\s+(<span>)*/gi, " ").trim();
+				let classroom = info[2].trim();
+				let note = info.length > 3 ? info[3].trim() : "";
+				
+				exams.push(new Exam(this.name, start, end, "").createDescription(enrollment, tipe, classroom, note));
 			}
 		});
 		return exams;

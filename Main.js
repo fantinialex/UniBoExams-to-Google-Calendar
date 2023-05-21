@@ -1,12 +1,13 @@
 function main(){
 	let calendar = CalendarApp.getCalendarsByName('Università appelli esami')[0];
+	let mail = "mail@example.com";
 
 	let courses = [
 		new Course("Corso 1", ["Scritto"], 3),
 		new Course("Corso 2", ["*"], 2)
 	];
 
-	courses.forEach(c => c.createExams(calendar));
+	courses.forEach(c => c.createExams(calendar, mail));
 }
 
 function manual(){
