@@ -12,33 +12,33 @@ class Report{
 	add(exam){
 		this.report += "<b>Aggiunto esame:</b><br>"
 		this.report += exam.toString()+"<br><br>";
-		console.log("Creato "+exam.name+" del "+exam.start);
+		console.log("Creato "+this.course.name+" del "+exam.start);
 	}
 
 	update(o, n){
 		this.report += "<b>Aggiornato esame:</b><br>"
-		this.report += "<b>Versione precedente:</b><br>"+o.toString()+"<br>";
-		this.report += "<b>Nuova versione:</b><br>"+n.toString()+"<br><br>";
-		console.log("Aggiornato "+o.name+" del "+o.start);
+		this.report += "<u>Versione precedente:</u><br>"+o.toString()+"<br>";
+		this.report += "<u>Nuova versione:</u><br>"+n.toString()+"<br><br>";
+		console.log("Aggiornato "+this.course.name+" del "+o.start);
 	}
 
 	delete(exam){
 		this.report += "<b>Cancellato esame:</b><br>"
 		this.report += exam.toString()+"<br><br>";
-		console.log("Eliminato "+exam.name+" del "+exam.start);
+		console.log("Eliminato "+this.course.name+" del "+exam.start);
 	}
 
 	error(exam){
 		this.report += "<b>ERRORE esame:</b><br>"
 		this.report += exam.toString()+"<br><br>";
-		console.log("Errore "+exam.name+" del "+exam.start);
+		console.log("Errore "+this.course.name+" del "+exam.start);
 	}
 
 	send(){
 		if(this.report != "" && this.mail != "")
 			MailApp.sendEmail({
 				to: this.mail,
-				subject: "Report esami "+this.course,
+				subject: "Report esami "+this.course.name,
 				htmlBody: this.report
 			});
 		this.reset();

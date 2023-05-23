@@ -1,16 +1,23 @@
 class Course{
 
-	constructor(name, tipe, duration){
+	constructor(degreeProgramme, name, tipe, duration){
+		this.degreeProgramme = degreeProgramme;
 		this.name = name;
 		this.tipe = tipe;
 		this.duration = duration;
 	}
 
+	/**
+	 * Insert exams into the passed calendar, or update it, and send a report to the passed mail
+	 *
+	 * @param {Calendar} calendar calendar object where to insert the exams
+	 * @param {String} mail mail where to send the report
+	 */
 	createExams(calendar, mail){
-		let exW = this.getExamsWeb();
-		let exC = this.getExamsCalendar(calendar);
+		let exW = this.getExamsWeb_();
+		let exC = this.getExamsCalendar_(calendar);
 
-		let report = new Report(this.name, mail);
+		let report = new Report(this, mail);
 
 		exW.forEach(ex => {
 			let found = 0, update = false, c = -1;
@@ -60,20 +67,33 @@ class Course{
 		report.send();
 	}
 
+	/**
+	 * Manually insert an exam into the passed calendar
+	 *
+	 * @param {Calendar} calendar calendar object where to insert the exam
+	 * @param {Date[]} dates array of dates of the exam
+	 * @return {Course} course object itself
+	 */
 	addManual(calendar, dates){
-		let report = new Report(this.name, "");
+		let report = new Report(this, "");
 		dates.forEach(start => {
 			let end = new Date(start.getTime() + this.duration*60*60*1000);
-			let ex = new Exam(this.name, start, end, "NON presente su AlmaEsami");
+			let ex = new Exam(this, start, end, "NON presente su AlmaEsami");
 			ex.create(calendar);
 			report.add(ex);
 		});
+		return this;
 		//TODO add check if exam already exists
 	}
 
+	/**
+	 * Delete all future exams of the course from the passed calendar
+	 *
+	 * @param {Calendar} calendar calendar object where to delete the exams
+	 */
 	deleteAllFuture(calendar){
-		let events = this.getExamsCalendar(calendar);
-		let report = new Report(this.name, "");
+		let events = this.getExamsCalendar_(calendar);
+		let report = new Report(this, "");
 		events.forEach(ex => {
 			try{
 				ex.delete(calendar);
@@ -85,8 +105,8 @@ class Course{
 		});
 	}
 
-	getExamsWeb(){
-		let url = "https://corsi.unibo.it/laurea/IngegneriaInformatica/appelli?appelli="+this.name.replace(" ","+").toUpperCase();
+	getExamsWeb_(){
+		let url = this.degreeProgramme.examsUrl+"?appelli="+this.name.replace(" ","+").toUpperCase();
 		let str = UrlFetchApp.fetch(url).getContentText();
 		const tableRegex = /<table class=\"single-item\">([\s\S]*?)<\/table>/gi;
 		let examsTable = str.match(tableRegex);
@@ -95,7 +115,7 @@ class Course{
 		const dateRegex = /(?<=<td class=\"text-secondary\">)(.*)(?=<\/td>)/gi;
 		const infoRegex = /(?<=<td>)([\s\S]*?)(?=<\/td>)/gi;
 		examsTable.forEach(ex => {
-			let start = Course.createDate(ex.match(dateRegex)[0].replace(" ore",""));
+			let start = Course.createDate_(ex.match(dateRegex)[0].replace(" ore",""));
 			let info = ex.match(infoRegex);
 			let tipe = info[1].trim();
 
@@ -107,13 +127,13 @@ class Course{
 				let classroom = info[2].trim();
 				let note = info.length > 3 ? info[3].trim() : "";
 				
-				exams.push(new Exam(this.name, start, end, "").createDescription(enrollment, tipe, classroom, note));
+				exams.push(new Exam(this, start, end, "").createDescription(enrollment, tipe, classroom, note));
 			}
 		});
 		return exams;
 	}
 
-	getExamsCalendar(calendar){
+	getExamsCalendar_(calendar){
 		let exams = [];
 
 		let start = new Date(new Date().setHours(0,0,0,0));
@@ -121,12 +141,12 @@ class Course{
 		let events = calendar.getEvents(start, end, {search: this.name});
 		
 		for(let i=0; i<events.length; i++){
-			exams.push(new Exam(events[i].getTitle(), events[i].getStartTime(), events[i].getEndTime(), events[i].getDescription()));
+			exams.push(new Exam(this, events[i].getStartTime(), events[i].getEndTime(), events[i].getDescription()));
 		}
 		return exams;
 	}
 
-	static createDate(string) {
+	static createDate_(string) {
 		let day = string.substring(0, 2);
 		let monthTxt = string.match(/\s([a-z]*)\s/gi)[0].trim();
 		let month;

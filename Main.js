@@ -1,17 +1,9 @@
-function main(){
-	let calendar = CalendarApp.getCalendarsByName('Università appelli esami')[0];
-	let mail = "mail@example.com";
-
-	let courses = [
-		new Course("Corso 1", ["Scritto"], 3),
-		new Course("Corso 2", ["*"], 2)
-	];
-
-	courses.forEach(c => c.createExams(calendar, mail));
-}
-
-function manual(){
-	let calendar = CalendarApp.getCalendarsByName('Università appelli esami')[0];
-
-	new Course("Corso 1", ["*"], 1).addManual(calendar, [new Date(2023, 1, 1, 14, 0)])
+/**
+ * Creates a new DegreeProgramme object
+ *
+ * @param {String} examsUrl url of the exams page of the degree programme (es. "https://corsi.unibo.it/laurea/IngegneriaInformatica/appelli")
+ * @return {DegreeProgramme} degree programme object
+ */
+function getDegreeProgramme(examsUrl){
+	return new DegreeProgramme(examsUrl);
 }
