@@ -38,21 +38,18 @@ class Course{
 			}
 		});
 
-		exC.forEach(examC => {
-			if(examC.description === "NON presente su AlmaEsami") return; //do not delete if manually added
-
-			const foundInWeb = exW.filter(examW => examC.equals(examW, false)).length > 0
-
-			if(!foundInWeb){
+		exC
+			.filter(exam => exam.description !== "NON presente su AlmaEsami") //not manually added
+			.filter(exam => exW.filter(examW => exam.equals(examW, false)).length === 0) //not found in website
+			.forEach(exam => {
 				try{
-					examC.delete(calendar);
-					report.delete(examC);
+					exam.delete(calendar);
+					report.delete(exam);
 				}
 				catch(e){
-					report.error(examC);
+					report.error(exam);
 				}
-			}
-		});
+			});
 
 		report.send();
 	}
@@ -116,7 +113,7 @@ class Course{
 				const enrollment = info[0].replace(/(<\/span>)*\s+(<span>)*/gi, " ").trim();
 				const classroom = info[2].trim();
 				const note = info.length > 3 ? info[3].trim() : "";
-				
+
 				exams.push(new Exam(this, start, end, "").createDescription(enrollment, type, classroom, note));
 			}
 		});
@@ -124,17 +121,11 @@ class Course{
 	}
 
 	getExamsCalendar_(calendar){
-		const exams = [];
-
 		const start = new Date(new Date().setHours(0,0,0,0));
 		const end = new Date(start.getTime() + 1.5*365*24*60*60*1000); // 1.5 years
 		const events = calendar.getEvents(start, end, {search: this.name});
 
-		events.forEach(event => {
-			exams.push(new Exam(this, event.getStartTime(), event.getEndTime(), event.getDescription()));
-		})
-
-		return exams;
+		return events.map(event => new Exam(this, event.getStartTime(), event.getEndTime(), event.getDescription()));
 	}
 
 	static createDate_(dateString) {
