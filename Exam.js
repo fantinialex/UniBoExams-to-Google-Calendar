@@ -23,15 +23,15 @@ class Exam{
 	}
 
 	delete(calendar){
-		//cecrco tutti gli eventi con lo stesso nome e data
+		//get from calendar all events with same name and date
 		const events = calendar.getEvents(this.start, this.end, {search: this.course.name});
-		if(events.length === 1) //se è univoco lo cancello
+		if(events.length === 1) //delete if unique
 			events[0].deleteEvent();
-		else{ //se non è univoco cerco quello con la descrizione uguale
+		else{ //if not unique, filter by description
 			const filteredEvents = events.filter(event => event.getDescription() === this.description);
 			if(filteredEvents.length === 1)
 				filteredEvents[0].deleteEvent();
-			else //altrimenti non lo cancello
+			else //don't delete any event
 				throw new Error("Non è stato possibile cancellare "+this.course.name+" del "+this.start+" perché non è univoco");
 		}
 	}

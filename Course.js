@@ -21,7 +21,7 @@ class Course{
 		exW.forEach(examW => {
 			const foundInCalendar = exC.filter(examC => examC.equals(examW, false));
 
-			switch(foundInCalendar.length){ //controllo quanti ne ho trovati
+			switch(foundInCalendar.length){ //check on found events number
 				case 0:
 					report.add(examW);
 					examW.create(calendar);
@@ -39,7 +39,7 @@ class Course{
 		});
 
 		exC.forEach(examC => {
-			if(examC.description === "NON presente su AlmaEsami") return; //non elimino gli esami inseriti manualmente (non presenti su AlmaEsami)
+			if(examC.description === "NON presente su AlmaEsami") return; //do not delete if manually added
 
 			const foundInWeb = exW.filter(examW => examC.equals(examW, false)).length > 0
 
@@ -109,7 +109,7 @@ class Course{
 			const info = ex.match(infoRegex);
 			const type = info[1].trim();
 
-			//solo esami futuri e del tipo spefificato (o tutti)
+			//filter future exams and filter by type
 			if(start.valueOf() >= new Date().setHours(0,0,0,0) && (this.type[0] === "*" || this.type.includes(type))){
 				const end = new Date(start.getTime() + this.duration*60*60*1000);
 
