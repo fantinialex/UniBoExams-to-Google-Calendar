@@ -12,13 +12,14 @@
 
 ```js
 function checkExams(){
-	let calendar = CalendarApp.getCalendarsByName('University Exams')[0];
-	let mail = "my.mail@example.com";
+	const calendar = CalendarApp.getCalendarsByName('University Exams')[0];
+	const mail = "my.mail@example.com";
 
-	let dp = UniBoExams.getDegreeProgramme("https://corsi.unibo.it/laurea/IngegneriaInformatica/appelli");
+	const dp = UniBoExams.getDegreeProgramme("https://corsi.unibo.it/laurea/IngegneriaInformatica/appelli");
   
-	let courses = [
-		dp.getCourse("Analisi matematica T-1", ["Scritto"], 2.5)
+	const courses = [
+		dp.getCourse("Analisi matematica T-1", ["Scritto"], 2.5),
+		dp.getCourse("Analisi matematica T-2", ["*"], 2)
 	];
 
 	courses.forEach(c => c.createExams(calendar, mail));

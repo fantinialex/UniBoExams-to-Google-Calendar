@@ -95,14 +95,14 @@ class Course{
 	getExamsWeb_(){
 		const url = this.degreeProgramme.examsUrl+"?appelli="+this.name.replace(" ","+").toUpperCase();
 		const str = UrlFetchApp.fetch(url).getContentText();
-		const tableRegex = /<table class=\"single-item\">([\s\S]*?)<\/table>/gi;
+		const tableRegex = /<table class="single-item">([\s\S]*?)<\/table>/g;
 		const examsTable = str.match(tableRegex);
 		const exams = [];
 
-		const dateRegex = /(?<=<td class=\"text-secondary\">)(.*)(?=<\/td>)/gi;
-		const infoRegex = /(?<=<td>)([\s\S]*?)(?=<\/td>)/gi;
+		const dateRegex = /(?<=<td class="text-secondary">)(.*)(?=<\/td>)/g;
+		const infoRegex = /(?<=<td>)([\s\S]*?)(?=<\/td>)/g;
 		examsTable.forEach(ex => {
-			const start = Course.createDate_(ex.match(dateRegex)[0].replace(" ore",""));
+			const start = Course.createDate_(ex.match(dateRegex)[0]);
 			const info = ex.match(infoRegex);
 			const type = info[1].trim();
 
@@ -110,7 +110,7 @@ class Course{
 			if(start.valueOf() >= new Date().setHours(0,0,0,0) && (this.type[0] === "*" || this.type.includes(type))){
 				const end = new Date(start.getTime() + this.duration*60*60*1000);
 
-				const enrollment = info[0].replace(/(<\/span>)*\s+(<span>)*/gi, " ").trim();
+				const enrollment = info[0].replace(/(<\/span>)*\s+(<span>)*/g, " ").trim();
 				const classroom = info[2].trim();
 				const note = info.length > 3 ? info[3].trim() : "";
 
@@ -129,8 +129,10 @@ class Course{
 	}
 
 	static createDate_(dateString) {
-		const day = dateString.substring(0, 2);
-		const monthTxt = dateString.match(/\s([a-z]*)\s/gi)[0].trim();
+		//format ex.: 17 luglio 2023 ore 14:30
+		const dateSplitted = dateString.split(/[\s:]+/g);
+
+		const day = dateSplitted[0];
 		const allMonths = [
 			"gennaio",
 			"febbraio",
@@ -144,12 +146,13 @@ class Course{
 			"ottobre",
 			"novembre",
 			"dicembre"
-		]
+		];
+		const month = allMonths.indexOf(dateSplitted[1]);
+		const year = dateSplitted[2];
 
-		const year = dateString.match(/\d\d\d\d/gi)[0];
-		const month = allMonths.indexOf(monthTxt)
-		const hour = dateString.substring(dateString.length - 5, dateString.length - 3);
-		const minutes = dateString.substring(dateString.length - 2, dateString.length);
+		const hour = dateSplitted[4];
+		const minutes = dateSplitted[5];
+
 		return new Date(year, month, day, hour, minutes);
 	}
 }
