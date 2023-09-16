@@ -5,6 +5,7 @@ class Course{
 		this.name = name;
 		this.type = type;
 		this.duration = duration;
+		this.skipExams = () => false;
 	}
 
 	/**
@@ -74,6 +75,17 @@ class Course{
 	}
 
 	/**
+	 * Set the expression to skip exams
+	 *
+	 * @param {Function} expression function that takes an exam and returns true if the exam has to be skipped
+	 * @return {Course} object itself
+	 */
+	setSkipExams(expression){
+		this.skipExams = expression;
+		return this;
+	}
+
+	/**
 	 * Delete all future exams of the course from the passed calendar
 	 *
 	 * @param {Calendar} calendar calendar object where to delete the exams
@@ -93,12 +105,13 @@ class Course{
 	}
 
 	getExamsWeb_(){
-		const url = this.degreeProgramme.examsUrl+"?appelli="+this.name.replace(" ","+").toUpperCase();
+		const url = this.degreeProgramme.examsUrl+"?appelli="+this.name.replaceAll(" ","+").toUpperCase();
 		const str = UrlFetchApp.fetch(url).getContentText();
 		const tableRegex = /<table class="single-item">([\s\S]*?)<\/table>/g;
 		const examsTable = str.match(tableRegex);
 		const exams = [];
 
+    if(examsTable!==null){
 		const dateRegex = /(?<=<td class="text-secondary">)(.*)(?=<\/td>)/g;
 		const infoRegex = /(?<=<td>)([\s\S]*?)(?=<\/td>)/g;
 		examsTable.forEach(ex => {
@@ -108,16 +121,17 @@ class Course{
 
 			//filter future exams and filter by type
 			if(start.valueOf() >= new Date().setHours(0,0,0,0) && (this.type[0] === "*" || this.type.includes(type))){
-				const end = new Date(start.getTime() + this.duration*60*60*1000);
+			const end = new Date(start.getTime() + this.duration*60*60*1000);
 
-				const enrollment = info[0].replace(/(<\/span>)*\s+(<span>)*/g, " ").trim();
-				const classroom = info[2].trim();
-				const note = info.length > 3 ? info[3].trim() : "";
+			const enrollment = info[0].replace(/(<\/span>)*\s+(<span>)*/g, " ").trim();
+			const classroom = info[2].trim();
+			const note = info.length > 3 ? info[3].trim() : "";
 
-				exams.push(new Exam(this, start, end, "").createDescription(enrollment, type, classroom, note));
+			exams.push(new Exam(this, start, end, "").createDescription(enrollment, type, classroom, note));
 			}
 		});
-		return exams;
+    }
+		return exams.filter(ex => !this.skipExams(ex));
 	}
 
 	getExamsCalendar_(calendar){
