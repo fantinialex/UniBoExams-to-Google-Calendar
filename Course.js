@@ -139,7 +139,9 @@ class Course{
 		const end = new Date(start.getTime() + 1.5*365*24*60*60*1000); // 1.5 years
 		const events = calendar.getEvents(start, end, {search: this.name});
 
-		return events.map(event => new Exam(this, event.getStartTime(), event.getEndTime(), event.getDescription()));
+		return events
+			.filter(event => (this.type[0] === "*" || event.getDescription() == "NON presente su AlmaEsami" || this.type.some(type => event.getDescription().includes(type)))) //filter by type + manually added
+			.map(event => new Exam(this, event.getStartTime(), event.getEndTime(), event.getDescription()));
 	}
 
 	static createDate_(dateString) {

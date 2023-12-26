@@ -37,7 +37,7 @@ class Report{
 		if(this.report != "" && this.mail != "")
 			MailApp.sendEmail({
 				to: this.mail,
-				subject: "Report esami "+this.course.name,
+				subject: "Report esami "+this.course.name + Report.printTypes(this.course.type),
 				htmlBody: this.report
 			});
 		this.reset();
@@ -112,5 +112,25 @@ class Report{
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * Print types of an exam
+	 * 
+	 * @param {String[]} types array of types
+	 * @return {String} string with types
+	 */
+	static printTypes(types){
+		if(types[0] === "*")
+			return "";
+		else{
+			let result = " [";
+			types.forEach(t => {
+				result += t+", ";
+			});
+			result = result.substring(0, result.length-2);
+			result += "]";
+			return result;
+		}
 	}
 }
